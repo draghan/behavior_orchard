@@ -23,6 +23,10 @@
 */
 
 #include "BehaviorOrchard.hpp"
-#include <wx/app.h>
 
-IMPLEMENT_APP(BehaviorOrchard)
+bool BehaviorOrchard::OnInit()
+{
+    auto frame = new MainFrame();
+    frame->Show(true);
+    return true;
+}

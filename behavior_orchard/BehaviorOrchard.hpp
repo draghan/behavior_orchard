@@ -22,7 +22,18 @@
     SOFTWARE.
 */
 
-#include "BehaviorOrchard.hpp"
+#pragma once
+
+#include "frames/MainFrame.hpp"
+
 #include <wx/app.h>
 
-IMPLEMENT_APP(BehaviorOrchard)
+
+class BehaviorOrchard: public wxApp
+{
+public:
+    bool OnInit() override;
+};
+
+
+
