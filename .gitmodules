@@ -1,0 +1,3 @@
+[submodule "external/behavior_tree"]
+	path = external/behavior_tree
+	url = https://github.com/draghan/behavior_tree.git

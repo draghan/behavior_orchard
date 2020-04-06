@@ -1,0 +1,40 @@
+cmake_minimum_required(VERSION 3.17)
+project(behavior_orchard)
+
+set(CMAKE_CXX_STANDARD 17)
+
+add_library(bt
+        ./external/behavior_tree/behavior_system/BehaviorEmpty.cpp
+        ./external/behavior_tree/behavior_system/IBehavior.cpp
+        ./external/behavior_tree/behavior_system/tree/BehaviorTree.cpp
+        ./external/behavior_tree/behavior_system/composite/BehaviorSelector.cpp
+        ./external/behavior_tree/behavior_system/composite/BehaviorSequence.cpp
+        ./external/behavior_tree/behavior_system/decorator/DecoratorInvert.cpp
+        ./external/behavior_tree/behavior_system/decorator/DecoratorLink.cpp
+        ./external/behavior_tree/behavior_system/decorator/DecoratorLoop.cpp
+        ./external/behavior_tree/behavior_system/decorator/DecoratorMaxNTries.cpp
+        ./external/behavior_tree/behavior_system/primitive/BehaviorAction.cpp
+        ./external/behavior_tree/behavior_system/primitive/BehaviorCondition.cpp
+        )
+
+target_include_directories(bt PRIVATE
+        ./external/behavior_tree/behavior_system/
+        ./external/behavior_tree/behavior_system/tree
+        ./external/behavior_tree/behavior_system/composite
+        ./external/behavior_tree/behavior_system/decorator
+        ./external/behavior_tree/behavior_system/primitive
+        )
+
+set(SOURCE_FILES
+        behavior_orchard/main.cpp
+        )
+
+add_executable(behavior_orchard ${SOURCE_FILES})
+
+target_include_directories(behavior_orchard PRIVATE
+        external/behavior_tree/behavior_system/tree/)
+
+find_package(wxWidgets COMPONENTS stc core base REQUIRED)
+include("${wxWidgets_USE_FILE}")
+
+target_link_libraries(behavior_orchard bt ${wxWidgets_LIBRARIES} stdc++fs)
