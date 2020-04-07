@@ -22,7 +22,8 @@
     SOFTWARE.
 */
 
-#include "BehaviorOrchard.hpp"
-#include <wx/app.h>
+#include "MainFrame.hpp"
 
-IMPLEMENT_APP(BehaviorOrchard)
+MainFrame::MainFrame(): GeneratedMainFrame(nullptr)
+{
+}
