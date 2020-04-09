@@ -1,3 +1,6 @@
 [submodule "external/behavior_tree"]
 	path = external/behavior_tree
 	url = https://github.com/draghan/behavior_tree.git
+[submodule "external/Catch2"]
+	path = external/Catch2
+	url = https://github.com/catchorg/Catch2.git
