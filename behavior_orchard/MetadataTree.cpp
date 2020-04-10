@@ -23,12 +23,21 @@
 */
 
 #include "MetadataTree.hpp"
-
+#include <execution>
 
 std::vector<NodeMetadataPtr> MetadataTree::get_children_of(NodeMetadata::Id id)
 {
+    auto found = std::any_of(std::execution::par, this->nodes.cbegin(), this->nodes.cend(), [&](const auto& node)
+    {
+        return node->get_id() == id;
+    });
+    if(!found)
+    {
+        throw std::out_of_range{"There is no requested node in the pool!"};
+    }
+
     std::vector<NodeMetadataPtr> children;
-    std::for_each(this->nodes.cbegin(), this->nodes.cend(), [&](const auto &node)
+    std::for_each(std::execution::seq,this->nodes.cbegin(), this->nodes.cend(), [&](const auto &node)
     {
         if (node->get_parent_id() == id)
         {
@@ -38,17 +47,9 @@ std::vector<NodeMetadataPtr> MetadataTree::get_children_of(NodeMetadata::Id id)
     return children;
 }
 
-//NodeMetadataPtr MetadataTree::get_parent_of(NodeMetadata::Id id)
-//{
-//    std::find_if(this->nodes.cbegin(), this->nodes.cend(), [&](const auto &node)
-//    {
-//        return node->get_parent_id();
-//    })
-//}
-
 NodeMetadataPtr MetadataTree::get_node(NodeMetadata::Id id)
 {
-    auto found_node = std::find_if(this->nodes.cbegin(), this->nodes.cend(), [&](const auto &node)
+    auto found_node = std::find_if(std::execution::par,this->nodes.cbegin(), this->nodes.cend(), [&](const auto &node)
     {
         return node->get_id() == id;
     });
@@ -71,7 +72,7 @@ NodeMetadata::Id MetadataTree::emplace_node(NodeType type, NodeMetadata::Id pare
     // precondition check if given parent exists - but do not check null parent
     if (parent_id != NodeMetadata::id_null)
     {
-        auto parent_found = std::any_of(this->nodes.cbegin(), this->nodes.cend(), [&](const auto &node)
+        auto parent_found = std::any_of(std::execution::par,this->nodes.cbegin(), this->nodes.cend(), [&](const auto &node)
         {
             return node->get_id() == parent_id;
         });
@@ -90,16 +91,68 @@ NodeMetadata::Id MetadataTree::emplace_node(NodeType type, NodeMetadata::Id pare
 NodeMetadata::Id MetadataTree::add_node(NodeType type, NodeMetadata::Id parent_id)
 {
     const auto parent = this->get_node(parent_id);
-    if(parent == nullptr)
+    if (parent == nullptr)
     {
         throw std::out_of_range{"There is no requested parent in the pool!"};
     }
 
     wxRealPoint node_position{parent->position.x, parent->position.y + 1.5 * NodeMetadata::node_item_size.GetY()};
     const auto siblings = this->get_children_of(parent_id);
-    if(!siblings.empty())
+    if (!siblings.empty())
     {
-        node_position.x = siblings[siblings.size()-1]->position.x + 1.5 * NodeMetadata::node_item_size.GetX();
+        node_position.x = siblings[siblings.size() - 1]->position.x + 1.5 * NodeMetadata::node_item_size.GetX();
     }
     return this->emplace_node(type, parent_id, node_position);
+}
+
+NodeMetadataPtr MetadataTree::get_parent_of(NodeMetadata::Id id)
+{
+    auto wanted_node = this->get_node(id);
+    if (wanted_node == nullptr)
+    {
+        throw std::out_of_range{"There is no requested node in the pool!"};
+    }
+
+    return this->get_node(wanted_node->get_parent_id());
+}
+
+NodeMetadataPtr MetadataTree::get_right_sibling_of(NodeMetadata::Id id)
+{
+    auto wanted_node = this->get_node(id);
+    if (wanted_node == nullptr)
+    {
+        throw std::out_of_range{"There is no requested node in the pool!"};
+    }
+    auto first_child_of_parent = std::find_if(std::execution::seq,this->nodes.cbegin(), this->nodes.cend(), [&](const auto &current_node)
+    {
+        return current_node->get_parent_id() == wanted_node->get_parent_id() &&
+               current_node->get_id() > wanted_node->get_id();
+    });
+
+    if (first_child_of_parent == this->nodes.cend())
+    {
+        return nullptr;
+    }
+
+    return first_child_of_parent->get();
+}
+
+NodeMetadataPtr MetadataTree::get_left_sibling_of(NodeMetadata::Id id)
+{
+    auto wanted_node = this->get_node(id);
+    if (wanted_node == nullptr)
+    {
+        throw std::out_of_range{"There is no requested node in the pool!"};
+    }
+    auto first_child_of_parent = std::find_if(std::execution::seq,this->nodes.rbegin(), this->nodes.rend(), [&](const auto &current_node)
+    {
+        return current_node->get_parent_id() == wanted_node->get_parent_id() &&
+               current_node->get_id() < wanted_node->get_id();
+    });
+
+    if (first_child_of_parent == this->nodes.rend())
+    {
+        return nullptr;
+    }
+    return first_child_of_parent->get();
 }
