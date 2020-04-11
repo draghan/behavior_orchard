@@ -55,7 +55,3 @@ private:
 
     NodeMetadata::Id emplace_node(NodeType type, NodeMetadata::Id parent_id, wxRealPoint position);
 };
-
-
-
-MetadataTree* get_biiiig_tree();
