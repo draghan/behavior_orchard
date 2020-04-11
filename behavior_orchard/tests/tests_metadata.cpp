@@ -356,43 +356,87 @@ TEST_CASE("MetadataTree basics", "[MetadataTree]")
         auto condition2_id = tree.add_node(NodeType::condition, selector_id);
         auto action4_id = tree.add_node(NodeType::condition, sequence_id);
 
-        NodeMetadataPtr left_sibling = nullptr;
+        NodeMetadataPtr right_sibling = nullptr;
 
-        REQUIRE_NOTHROW(left_sibling = tree.get_right_sibling_of(sequence_id));
-        REQUIRE(left_sibling == nullptr);
+        REQUIRE_NOTHROW(right_sibling = tree.get_right_sibling_of(sequence_id));
+        REQUIRE(right_sibling == nullptr);
 
-        REQUIRE_NOTHROW(left_sibling = tree.get_right_sibling_of(invert_id));
-        REQUIRE(left_sibling != nullptr);
-        REQUIRE(left_sibling->get_id() == selector_id);
+        REQUIRE_NOTHROW(right_sibling = tree.get_right_sibling_of(invert_id));
+        REQUIRE(right_sibling != nullptr);
+        REQUIRE(right_sibling->get_id() == selector_id);
 
-        REQUIRE_NOTHROW(left_sibling = tree.get_right_sibling_of(condition1_id));
-        REQUIRE(left_sibling == nullptr);
+        REQUIRE_NOTHROW(right_sibling = tree.get_right_sibling_of(condition1_id));
+        REQUIRE(right_sibling == nullptr);
 
-        REQUIRE_NOTHROW(left_sibling = tree.get_right_sibling_of(selector_id));
-        REQUIRE(left_sibling != nullptr);
-        REQUIRE(left_sibling->get_id() == action4_id);
+        REQUIRE_NOTHROW(right_sibling = tree.get_right_sibling_of(selector_id));
+        REQUIRE(right_sibling != nullptr);
+        REQUIRE(right_sibling->get_id() == action4_id);
 
-        REQUIRE_NOTHROW(left_sibling = tree.get_right_sibling_of(loop_id));
-        REQUIRE(left_sibling != nullptr);
-        REQUIRE(left_sibling->get_id() == action2_id);
+        REQUIRE_NOTHROW(right_sibling = tree.get_right_sibling_of(loop_id));
+        REQUIRE(right_sibling != nullptr);
+        REQUIRE(right_sibling->get_id() == action2_id);
 
-        REQUIRE_NOTHROW(left_sibling = tree.get_right_sibling_of(action1_id));
-        REQUIRE(left_sibling == nullptr);
+        REQUIRE_NOTHROW(right_sibling = tree.get_right_sibling_of(action1_id));
+        REQUIRE(right_sibling == nullptr);
 
-        REQUIRE_NOTHROW(left_sibling = tree.get_right_sibling_of(action2_id));
-        REQUIRE(left_sibling != nullptr);
-        REQUIRE(left_sibling->get_id() == action3_id);
+        REQUIRE_NOTHROW(right_sibling = tree.get_right_sibling_of(action2_id));
+        REQUIRE(right_sibling != nullptr);
+        REQUIRE(right_sibling->get_id() == action3_id);
 
-        REQUIRE_NOTHROW(left_sibling = tree.get_right_sibling_of(action3_id));
-        REQUIRE(left_sibling != nullptr);
-        REQUIRE(left_sibling->get_id() == condition2_id);
+        REQUIRE_NOTHROW(right_sibling = tree.get_right_sibling_of(action3_id));
+        REQUIRE(right_sibling != nullptr);
+        REQUIRE(right_sibling->get_id() == condition2_id);
 
-        REQUIRE_NOTHROW(left_sibling = tree.get_right_sibling_of(condition2_id));
-        REQUIRE(left_sibling == nullptr);
+        REQUIRE_NOTHROW(right_sibling = tree.get_right_sibling_of(condition2_id));
+        REQUIRE(right_sibling == nullptr);
 
-        REQUIRE_NOTHROW(left_sibling = tree.get_right_sibling_of(action4_id));
-        REQUIRE(left_sibling == nullptr);
+        REQUIRE_NOTHROW(right_sibling = tree.get_right_sibling_of(action4_id));
+        REQUIRE(right_sibling == nullptr);
 
         REQUIRE_THROWS_AS(tree.get_right_sibling_of(300), std::out_of_range);
     }
+}
+
+TEST_CASE("perf")
+{
+
+    SECTION("prep")
+    {
+
+        auto tree = get_biiiig_tree();
+        SECTION("PERF_0_children_root")
+        {
+            auto children = tree->get_children_of(MetadataTree::root_id);
+        }
+
+        SECTION("PERF_1_children_middle")
+        {
+            auto children = tree->get_children_of(50000);
+        }
+
+        SECTION("PERF_1_children_not")
+        {
+            try{
+                auto children = tree->get_children_of(9999999);
+            }
+            catch (...)
+            {}
+        }
+
+        SECTION("PERF_1_ls")
+        {
+            auto children = tree->get_left_sibling_of(50000);
+        }
+
+        SECTION("PERF_2_rs")
+        {
+            auto children = tree->get_right_sibling_of(50000);
+        }
+
+        SECTION("PERF_3_p")
+        {
+            auto children = tree->get_parent_of(50000);
+        }
+    }
+
 }

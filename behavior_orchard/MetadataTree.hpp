@@ -47,6 +47,7 @@ public:
     [[nodiscard]] NodeMetadataPtr get_node(NodeMetadata::Id id);
     [[nodiscard]] NodeMetadataPtr get_left_sibling_of(NodeMetadata::Id id);
     [[nodiscard]] NodeMetadataPtr get_right_sibling_of(NodeMetadata::Id id);
+    [[nodiscard]] size_t get_number_of_children(NodeMetadata::Id id);
 
 private:
     std::vector<NodeMetadataOwningPtr> nodes;
@@ -57,3 +58,4 @@ private:
 
 
 
+MetadataTree* get_biiiig_tree();

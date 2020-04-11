@@ -25,31 +25,36 @@
 #include "MetadataTree.hpp"
 #include <execution>
 
+
 std::vector<NodeMetadataPtr> MetadataTree::get_children_of(NodeMetadata::Id id)
 {
-    auto found = std::any_of(std::execution::par, this->nodes.cbegin(), this->nodes.cend(), [&](const auto& node)
-    {
-        return node->get_id() == id;
-    });
-    if(!found)
-    {
-        throw std::out_of_range{"There is no requested node in the pool!"};
-    }
-
     std::vector<NodeMetadataPtr> children;
-    std::for_each(std::execution::seq,this->nodes.cbegin(), this->nodes.cend(), [&](const auto &node)
+    std::for_each(std::execution::seq, this->nodes.cbegin(), this->nodes.cend(), [&](const auto &node)
     {
         if (node->get_parent_id() == id)
         {
             children.push_back(node.get());
         }
     });
+
+    if(children.empty())
+    {
+        auto found = std::any_of(std::execution::par_unseq, this->nodes.cbegin(), this->nodes.cend(), [&](const auto &node)
+        {
+            return node->get_id() == id;
+        });
+        if (!found)
+        {
+            throw std::out_of_range{"There is no requested node in the pool!"};
+        }
+    }
+
     return children;
 }
 
 NodeMetadataPtr MetadataTree::get_node(NodeMetadata::Id id)
 {
-    auto found_node = std::find_if(std::execution::par,this->nodes.cbegin(), this->nodes.cend(), [&](const auto &node)
+    auto found_node = std::find_if(std::execution::par_unseq, this->nodes.cbegin(), this->nodes.cend(), [&](const auto &node)
     {
         return node->get_id() == id;
     });
@@ -72,10 +77,11 @@ NodeMetadata::Id MetadataTree::emplace_node(NodeType type, NodeMetadata::Id pare
     // precondition check if given parent exists - but do not check null parent
     if (parent_id != NodeMetadata::id_null)
     {
-        auto parent_found = std::any_of(std::execution::par,this->nodes.cbegin(), this->nodes.cend(), [&](const auto &node)
-        {
-            return node->get_id() == parent_id;
-        });
+        auto parent_found = std::any_of(std::execution::par_unseq, this->nodes.cbegin(), this->nodes
+                                                                                       .cend(), [&](const auto &node)
+                                        {
+                                            return node->get_id() == parent_id;
+                                        });
 
         if (!parent_found)
         {
@@ -95,13 +101,8 @@ NodeMetadata::Id MetadataTree::add_node(NodeType type, NodeMetadata::Id parent_i
     {
         throw std::out_of_range{"There is no requested parent in the pool!"};
     }
-
-    wxRealPoint node_position{parent->position.x, parent->position.y + 1.5 * NodeMetadata::node_item_size.GetY()};
-    const auto siblings = this->get_children_of(parent_id);
-    if (!siblings.empty())
-    {
-        node_position.x = siblings[siblings.size() - 1]->position.x + 1.5 * NodeMetadata::node_item_size.GetX();
-    }
+    auto siblings_number = static_cast<double>(this->get_number_of_children(parent_id));
+    wxRealPoint node_position{parent->position.x + siblings_number * 1.5 * NodeMetadata::node_item_size.GetX(), parent->position.y + 1.5 * NodeMetadata::node_item_size.GetY()};
     return this->emplace_node(type, parent_id, node_position);
 }
 
@@ -116,38 +117,60 @@ NodeMetadataPtr MetadataTree::get_parent_of(NodeMetadata::Id id)
     return this->get_node(wanted_node->get_parent_id());
 }
 
+MetadataTree* get_biiiig_tree()
+{
+    static auto tree = MetadataTree(NodeType::selector);
+    static bool first_run = true;
+
+    if(first_run)
+    {
+        for(int i = 0; i < 100000; ++i)
+        {
+            tree.add_node(NodeType::action, MetadataTree::root_id);
+        }
+        first_run = false;
+    }
+
+    return &tree;
+}
+
 NodeMetadataPtr MetadataTree::get_right_sibling_of(NodeMetadata::Id id)
 {
-    auto wanted_node = this->get_node(id);
-    if (wanted_node == nullptr)
+    auto found_node = std::find_if(std::execution::par_unseq, this->nodes.cbegin(), this->nodes.cend(), [&](const auto &node)
+    {
+        return node->get_id() == id;
+    });
+    if (found_node == this->nodes.cend())
     {
         throw std::out_of_range{"There is no requested node in the pool!"};
     }
-    auto first_child_of_parent = std::find_if(std::execution::seq,this->nodes.cbegin(), this->nodes.cend(), [&](const auto &current_node)
-    {
-        return current_node->get_parent_id() == wanted_node->get_parent_id() &&
-               current_node->get_id() > wanted_node->get_id();
-    });
+    auto parent_id = (*found_node)->get_parent_id();
+    auto first_child_of_parent = std::find_if(std::execution::seq, found_node + 1, this->nodes.cend(), [&](const auto &current_node)
+                                              {
+                                                  return current_node->get_parent_id() == parent_id;
+                                              });
 
     if (first_child_of_parent == this->nodes.cend())
     {
         return nullptr;
     }
-
     return first_child_of_parent->get();
 }
 
 NodeMetadataPtr MetadataTree::get_left_sibling_of(NodeMetadata::Id id)
 {
-    auto wanted_node = this->get_node(id);
-    if (wanted_node == nullptr)
+    auto found_node = std::find_if(std::execution::par_unseq, this->nodes.rbegin(), this->nodes.rend(), [&](const auto &node)
+    {
+        return node->get_id() == id;
+    });
+    if (found_node == this->nodes.rend())
     {
         throw std::out_of_range{"There is no requested node in the pool!"};
     }
-    auto first_child_of_parent = std::find_if(std::execution::seq,this->nodes.rbegin(), this->nodes.rend(), [&](const auto &current_node)
+    auto parent_id = (*found_node)->get_parent_id();
+    auto first_child_of_parent = std::find_if(std::execution::seq, found_node + 1, this->nodes.rend(), [&](const auto &current_node)
     {
-        return current_node->get_parent_id() == wanted_node->get_parent_id() &&
-               current_node->get_id() < wanted_node->get_id();
+        return current_node->get_parent_id() == parent_id;
     });
 
     if (first_child_of_parent == this->nodes.rend())
@@ -155,4 +178,25 @@ NodeMetadataPtr MetadataTree::get_left_sibling_of(NodeMetadata::Id id)
         return nullptr;
     }
     return first_child_of_parent->get();
+}
+
+size_t MetadataTree::get_number_of_children(NodeMetadata::Id id)
+{
+    auto children_number = std::count_if(std::execution::par_unseq, this->nodes.cbegin(), this->nodes.cend(), [&](const auto& node)
+    {
+        return node->get_parent_id() == id;
+    });
+
+    if(children_number == 0)
+    {
+        auto found = std::any_of(std::execution::par_unseq, this->nodes.cbegin(), this->nodes.cend(), [&](const auto &node)
+        {
+            return node->get_id() == id;
+        });
+        if (!found)
+        {
+            throw std::out_of_range{"There is no requested node in the pool!"};
+        }
+    }
+    return static_cast<size_t>(children_number);
 }
