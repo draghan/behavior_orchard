@@ -91,5 +91,13 @@ add_executable(tests
         )
 target_link_libraries(tests behavior_orchard_logic)
 
+add_executable(performance_tests
+        ./behavior_orchard/tests/nanobench_main.cpp
+        ./behavior_orchard/tests/performance.cpp)
+
+target_link_libraries(performance_tests behavior_orchard_logic)
+target_include_directories(performance_tests PRIVATE ./external/nanobench/src/include)
+target_compile_options(performance_tests PRIVATE -O3)
+
 target_include_directories(tests PRIVATE
         external/Catch2/single_include/catch2)

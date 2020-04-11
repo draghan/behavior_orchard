@@ -42,12 +42,12 @@ public:
 
     NodeMetadata::Id add_node(NodeType type, NodeMetadata::Id parent_id);
 
-    [[nodiscard]] std::vector<NodeMetadataPtr> get_children_of(NodeMetadata::Id id);
-    [[nodiscard]] NodeMetadataPtr get_parent_of(NodeMetadata::Id id);
-    [[nodiscard]] NodeMetadataPtr get_node(NodeMetadata::Id id);
-    [[nodiscard]] NodeMetadataPtr get_left_sibling_of(NodeMetadata::Id id);
-    [[nodiscard]] NodeMetadataPtr get_right_sibling_of(NodeMetadata::Id id);
-    [[nodiscard]] size_t get_number_of_children(NodeMetadata::Id id);
+    [[nodiscard]] std::vector<NodeMetadataPtr> get_children_of(NodeMetadata::Id id) const;
+    [[nodiscard]] NodeMetadataPtr get_parent_of(NodeMetadata::Id id) const;
+    [[nodiscard]] NodeMetadataPtr get_node(NodeMetadata::Id id) const;
+    [[nodiscard]] NodeMetadataPtr get_left_sibling_of(NodeMetadata::Id id) const;
+    [[nodiscard]] NodeMetadataPtr get_right_sibling_of(NodeMetadata::Id id) const;
+    [[nodiscard]] size_t get_number_of_children(NodeMetadata::Id id) const;
 
 private:
     std::vector<NodeMetadataOwningPtr> nodes;
