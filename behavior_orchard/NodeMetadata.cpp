@@ -24,12 +24,15 @@
 
 #include "NodeMetadata.hpp"
 
+#include <utility>
 
-NodeMetadata::NodeMetadata(NodeType type_, Id parent_id_, Id id_, wxRealPoint position_)
+
+NodeMetadata::NodeMetadata(NodeType type_, Id parent_id_, Id id_, wxRealPoint position_, OptionalStringOrUlong additional_data_)
         : position{position_},
           id{id_},
           parent_id{parent_id_},
-          type{type_}
+          type{type_},
+          additional_data{std::move(additional_data_)}
 {
 }
 
@@ -46,4 +49,9 @@ NodeMetadata::Id NodeMetadata::get_id() const
 NodeType NodeMetadata::get_type() const
 {
     return this->type;
+}
+
+NodeMetadata::OptionalStringOrUlong NodeMetadata::get_data() const
+{
+    return this->additional_data;
 }

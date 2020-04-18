@@ -25,7 +25,8 @@
 #pragma once
 
 #include <wx/gdicmn.h>
-
+#include <optional>
+#include <variant>
 
 enum class NodeType
 {
@@ -43,18 +44,21 @@ class NodeMetadata
 {
 public:
     using Id = unsigned long long;
+    using OptionalStringOrUlong  = std::optional<std::variant<std::string, unsigned long>>;
     inline static const Id id_null{0};
     inline static const wxSize node_item_size{80, 40};
 
-    NodeMetadata(NodeType type_, Id parent_id_, Id id_, wxRealPoint position_);
+    NodeMetadata(NodeType type_, Id parent_id_, Id id_, wxRealPoint position_, OptionalStringOrUlong additional_data_ = std::nullopt);
 
     [[nodiscard]] Id get_parent_id() const;
     [[nodiscard]] Id get_id() const;
     [[nodiscard]] NodeType get_type() const;
+    [[nodiscard]] OptionalStringOrUlong get_data() const;
 
     wxRealPoint position;
 private:
     const Id id;
     const Id parent_id;
     const NodeType type;
+    const OptionalStringOrUlong additional_data;
 };
