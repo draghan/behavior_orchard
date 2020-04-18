@@ -50,6 +50,7 @@ std::string Node2Code::convert(const NodeMetadata &node) const
         case NodeType::max_n_tries:
             return Node2Code::convert_max_n_tries(node);
     }
+    throw std::logic_error{"This should never happen."};
 }
 
 std::string Node2Code::convert_condition(const NodeMetadata &node) const
